@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NormaMaster: Database Normalization Quest (1NF & 2NF)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+    }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.8);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+    .cell-hover {
+      transition: all 0.2s ease;
+    }
+    .cell-hover:hover {
+      background-color: rgba(99, 102, 241, 0.25) !important;
+      cursor: pointer;
+      transform: scale(1.01);
+    }
+    .drop-zone {
+      min-height: 110px;
+      transition: all 0.2s ease;
+    }
+    .drop-zone.drag-over {
+      border-color: #818cf8 !important;
+      background-color: rgba(99, 102, 241, 0.2) !important;
+    }
+    .draggable-item {
+      cursor: grab;
+      user-select: none;
+      touch-action: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .draggable-item:active {
+      cursor: grabbing;
+      transform: scale(1.03);
+    }
+    .draggable-item.selected-item {
+      ring: 4px;
+      ring-color: #f59e0b;
+      border-color: #f59e0b;
+      background-color: #374151;
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen justify-between p-3 md:p-6">
+
+  <header class="max-w-5xl w-full mx-auto flex items-center justify-between py-3 px-4 rounded-xl glass-card mb-4">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-xl text-white shadow-lg shadow-indigo-500/30">
+        N
+      </div>
+      <div>
+        <h1 class="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
+          NormaMaster
+          <span class="text-xs font-semibold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">S4 ICT Edition</span>
+        </h1>
+        <p class="text-xs text-slate-400">Database Normalization Quest (1NF & 2NF)</p>
+      </div>
+    </div>
+
+    <!-- HUD Stats -->
+    <div class="flex items-center space-x-3 md:space-x-4 text-xs md:text-sm font-semibold">
+      <div class="flex items-center space-x-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
+        <span class="text-amber-400">🏆 Score:</span>
+        <span id="score-display" class="text-white text-base">0</span>
+      </div>
+      <div class="flex items-center space-x-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
+        <span class="text-emerald-400">🔥 Streak:</span>
+        <span id="streak-display" class="text-white text-base">0</span>
+      </div>
+      <button id="sound-toggle" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition" title="Toggle Sound">
+        🔊
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-5xl w-full mx-auto flex-1 flex flex-col justify-center">
+
+    <!-- Screen 1: Start Screen -->
+    <div id="screen-start" class="glass-card rounded-2xl p-6 md:p-10 text-center max-w-3xl mx-auto my-auto">
+      <div class="inline-block p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 mb-4 text-indigo-400">
+        <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+        </svg>
+      </div>
+      <h2 class="text-3xl font-extrabold mb-3 text-white">Master Database Normalization!</h2>
+      <p class="text-slate-200 mb-6 text-sm md:text-base leading-relaxed">
+        Sharpen your HKDSE ICT database skills in 2 quick stages:
+        <br><strong class="text-indigo-300">Stage 1 (1NF):</strong> Click to hunt down non-atomic values or repeating columns.
+        <br><strong class="text-indigo-300">Stage 2 (2NF):</strong> Drag & drop attributes to eliminate partial key dependencies.
+      </p>
+
+      <!-- Clear & High Contrast Rule Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left mb-8">
+        <!-- 1NF Rule Card -->
+        <div class="bg-slate-900/90 p-5 rounded-xl border-2 border-indigo-500/60 shadow-lg shadow-indigo-950/50">
+          <div class="flex items-center justify-between mb-3 border-b border-indigo-500/30 pb-2">
+            <h3 class="font-extrabold text-indigo-300 text-base md:text-lg flex items-center gap-2">
+              ⚡ 1NF Rules
+            </h3>
+            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-200 border border-indigo-400/40">Atomicity</span>
+          </div>
+          <ul class="space-y-2.5 text-xs md:text-sm text-slate-100">
+            <li class="flex items-start gap-2">
+              <span class="text-indigo-400 font-bold">1.</span>
+              <span><strong>Atomic Values Only:</strong> Every cell must hold a single value.<br><span class="text-slate-400 text-xs">(❌ Avoid: <code class="text-amber-300 font-mono">"9123 4567, 9876 5432"</code>)</span></span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-indigo-400 font-bold">2.</span>
+              <span><strong>No Repeating Columns:</strong> Eliminate repeating field groups.<br><span class="text-slate-400 text-xs">(❌ Avoid: <code class="text-amber-300 font-mono">Elective1, Elective2, Elective3</code>)</span></span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 2NF Rule Card -->
+        <div class="bg-slate-900/90 p-5 rounded-xl border-2 border-emerald-500/60 shadow-lg shadow-emerald-950/50">
+          <div class="flex items-center justify-between mb-3 border-b border-emerald-500/30 pb-2">
+            <h3 class="font-extrabold text-emerald-300 text-base md:text-lg flex items-center gap-2">
+              🧩 2NF Rules
+            </h3>
+            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-200 border border-emerald-400/40">No Partial Key Dependency</span>
+          </div>
+          <ul class="space-y-2.5 text-xs md:text-sm text-slate-100">
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-400 font-bold">1.</span>
+              <span><strong>Must be in 1NF:</strong> Table already meets all First Normal Form criteria.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-400 font-bold">2.</span>
+              <span><strong>Full Functional Dependency:</strong> Every non-key attribute must depend on the <em>entire</em> composite Primary Key (PK).<br><span class="text-slate-400 text-xs">(❌ Separate fields that depend on only <em>part</em> of the composite PK)</span></span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button id="btn-start" class="flex-1 py-4 px-6 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold text-base rounded-xl shadow-lg shadow-indigo-500/30 transition transform hover:-translate-y-0.5 active:translate-y-0">
+          🚀 Start Stage 1 (1NF)
+        </button>
+        <button id="btn-start-2nf" class="flex-1 py-4 px-6 bg-slate-800 hover:bg-slate-700 text-emerald-300 font-bold text-base rounded-xl border border-emerald-500/40 shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
+          <span>Jump to Stage 2 (2NF)</span>
+          <span class="text-xl">➔</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="screen-stage1" class="glass-card rounded-2xl p-4 md:p-8 hidden flex-col">
+      <div class="flex items-center justify-between mb-4 border-b border-slate-700/60 pb-3">
+        <div>
+          <span class="text-xs uppercase tracking-wider text-indigo-400 font-bold">Stage 1 of 2</span>
+          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+            🔍 1NF Bug Hunter
+          </h2>
+        </div>
+        <div class="bg-indigo-950/80 border border-indigo-800 px-3 py-1 rounded-full text-xs font-semibold text-indigo-300">
+          Round <span id="1nf-round-num">1</span> / <span id="1nf-total-rounds">3</span>
+        </div>
+      </div>
+
+      <div id="1nf-instruction-box" class="bg-indigo-900/30 border border-indigo-500/30 rounded-xl p-4 mb-5 text-sm md:text-base">
+        <div id="1nf-demo-badge" class="hidden mb-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold uppercase tracking-wider">
+          🎓 Teacher Demo Example
+        </div>
+        <p class="font-semibold text-indigo-200" id="1nf-instruction-text">Loading instruction...</p>
+        <p class="text-xs text-slate-400 mt-1">Tap/Click on the <u class="text-indigo-300">specific cell or header</u> that violates 1NF rules.</p>
+      </div>
+
+      <!-- Table Container -->
+      <div class="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900/80 mb-5">
+        <table class="w-full text-left border-collapse text-sm md:text-base">
+          <thead id="1nf-table-head" class="bg-slate-800/90 text-slate-300">
+            <!-- Dynamic Headers -->
+          </thead>
+          <tbody id="1nf-table-body" class="divide-y divide-slate-800 text-slate-200">
+            <!-- Dynamic Rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Feedback Banner -->
+      <div id="1nf-feedback" class="hidden p-4 rounded-xl text-sm font-medium mb-4">
+        <!-- Dynamic Feedback -->
+      </div>
+
+      <button id="1nf-btn-next" class="hidden w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition shadow-lg">
+        Next Round ➔
+      </button>
+    </div>
+
+    <div id="screen-stage2" class="glass-card rounded-2xl p-4 md:p-8 hidden flex-col">
+      <div class="flex items-center justify-between mb-4 border-b border-slate-700/60 pb-3">
+        <div>
+          <span class="text-xs uppercase tracking-wider text-emerald-400 font-bold">Stage 2 of 2</span>
+          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+            🏗️ 2NF Table Architect
+          </h2>
+        </div>
+        <div class="bg-emerald-950/80 border border-emerald-800 px-3 py-1 rounded-full text-xs font-semibold text-emerald-300">
+          Scenario <span id="2nf-scenario-num">1</span> / <span id="2nf-total-scenarios">2</span>
+        </div>
+      </div>
+
+      <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-4 mb-5 text-sm">
+        <div id="2nf-demo-badge" class="hidden mb-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold uppercase tracking-wider">
+          🎓 Teacher Demo Example
+        </div>
+        <h3 id="2nf-scenario-title" class="font-bold text-emerald-300 text-base mb-1">Scenario Title</h3>
+        <p class="text-slate-300 mb-2">
+          <strong>Composite Primary Key:</strong> <span id="pk-badge" class="font-mono bg-indigo-900/60 text-indigo-300 border border-indigo-700 px-2 py-0.5 rounded text-xs">PK</span>
+        </p>
+        <p class="text-slate-400 text-xs" id="2nf-scenario-desc">
+          Drag fields or tap a field then tap a table to group non-key fields where they fully depend on the table's Primary Key.
+        </p>
+      </div>
+
+      <!-- Unassigned Fields Pool -->
+      <div class="mb-6">
+        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+          📦 Unassigned Non-Key Fields (Drag or Tap to Place):
+        </label>
+        <div id="2nf-fields-pool" class="flex flex-wrap gap-2.5 p-3 rounded-xl bg-slate-900/90 border border-slate-800 min-h-[60px] items-center">
+          <!-- Draggable Attributes -->
+        </div>
+      </div>
+
+      <!-- Target Tables Grid -->
+      <div id="2nf-tables-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <!-- Dynamic Target Tables -->
+      </div>
+
+      <!-- Feedback Banner -->
+      <div id="2nf-feedback" class="hidden p-4 rounded-xl text-sm font-medium mb-4">
+        <!-- Dynamic Feedback -->
+      </div>
+
+      <div class="flex gap-3">
+        <button id="2nf-btn-check" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition shadow-lg">
+          Validate 2NF Decomposition ✔
+        </button>
+        <button id="2nf-btn-next" class="hidden flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition shadow-lg">
+          Next Scenario ➔
+        </button>
+      </div>
+    </div>
+
+    <div id="screen-summary" class="glass-card rounded-2xl p-6 md:p-10 text-center max-w-2xl mx-auto hidden">
+      <div class="inline-block p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-4 text-amber-400 text-3xl">
+        🏆
+      </div>
+      <h2 class="text-3xl font-bold mb-2 text-white">Lesson Completed!</h2>
+      <p class="text-slate-300 mb-6 text-sm">You have successfully mastered the basics of 1NF and 2NF!</p>
+
+      <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-6 mb-6">
+        <div class="text-slate-400 text-xs uppercase tracking-widest font-semibold mb-1">Final Score</div>
+        <div id="final-score" class="text-5xl font-extrabold text-amber-400 mb-2">0</div>
+        <p id="final-rating" class="text-sm font-medium text-emerald-300">Excellent understanding of database normalization!</p>
+      </div>
+
+      <!-- Quick Takeaways Card -->
+      <div class="text-left bg-slate-900/80 border border-slate-800 rounded-xl p-4 mb-6 text-xs text-slate-300 space-y-2">
+        <div class="font-bold text-indigo-300 mb-1">📌 Key Lesson Takeaways for S4 ICT:</div>
+        <div>• <strong>1NF:</strong> Eliminate multi-valued data cells & repeating attribute columns. Ensure atomicity!</div>
+        <div>• <strong>2NF:</strong> Remove partial dependencies on composite primary keys by decomposing tables.</div>
+      </div>
+
+      <button id="btn-restart" class="w-full py-3.5 px-6 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition">
+        🔄 Play Again / Practice
+      </button>
+    </div>
+
+  </main>
+
+  <footer class="mt-6 text-center text-xs text-slate-500">
+    Designed for Secondary 4 HKDSE ICT Lessons • Normalization Practice Game
+  </footer>
+
+  <script>
+    // 1NF Data Scenarios
+    const data1NF = [
+      {
+        isDemo: true,
+        instruction: "🎓 TEACHER DEMO: Find the cell in this School Club Membership table that violates 1NF (non-atomic values).",
+        headers: ["StudentID", "StudentName", "Class", "JoinedClubs"],
+        rows: [
+          ["S1001", "Chan Tai Man", "4A", "Chess Club"],
+          ["S1002", "Lee Mei Ling", "4A", "Robotics Club, Art Club"],
+          ["S1003", "Wong Ka Ho", "4B", "Drama Club"]
+        ],
+        fault: { row: 1, col: 3 },
+        explanation: "TEACHER DEMO EXPLANATION: Cell 'Robotics Club, Art Club' contains multiple clubs in a single cell. In 1NF, every cell must hold a single, atomic value!"
+      },
+      {
+        instruction: "Find the cell in this Student Table that violates First Normal Form (1NF) due to Multi-Valued Attributes (non-atomic values).",
+        headers: ["StudentID", "StudentName", "Class", "PhoneNumbers"],
+        rows: [
+          ["S1001", "Chan Tai Man", "4A", "9123 4567"],
+          ["S1002", "Lee Mei Ling", "4A", "9876 5432, 6123 9876"],
+          ["S1003", "Wong Ka Ho", "4B", "5123 8888"]
+        ],
+        fault: { row: 1, col: 3 },
+        explanation: "Cell '9876 5432, 6123 9876' contains multiple phone numbers. 1NF requires each cell to contain atomic (single) values!"
+      },
+      {
+        instruction: "Identify the repeating attribute headers that violate 1NF by creating a Repeating Group in this Elective Choice table.",
+        headers: ["StudentID", "StudentName", "Elective1", "Elective2", "Elective3"],
+        rows: [
+          ["S1001", "Chan Tai Man", "ICT", "Physics", "M2"],
+          ["S1002", "Lee Mei Ling", "ICT", "Chemistry", "None"],
+          ["S1003", "Wong Ka Ho", "Biology", "Economics", "ICT"]
+        ],
+        fault: { cols: [2, 3, 4] },
+        explanation: "Columns 'Elective1', 'Elective2', and 'Elective3' form a repeating group! In 1NF, repeating attribute columns must be removed and stored in separate records or tables."
+      },
+      {
+        instruction: "Find the non-atomic multi-value cell in this Library Loan record table.",
+        headers: ["BorrowID", "StudentName", "BookTitles", "BorrowDate"],
+        rows: [
+          ["B001", "Cheung Wai", "HKDSE ICT Pass, Python 101", "2024-10-01"],
+          ["B002", "Ho Ho Yin", "Database Systems", "2024-10-02"],
+          ["B003", "Lau Sin Tung", "Networking Fundamentals", "2024-10-03"]
+        ],
+        fault: { row: 0, col: 2 },
+        explanation: "BookTitles cell 'HKDSE ICT Pass, Python 101' holds multiple books! Break them into individual rows so every value is atomic."
+      }
+    ];
+
+    // 2NF Data Scenarios
+    const data2NF = [
+      {
+        isDemo: true,
+        scenarioTitle: "🎓 TEACHER DEMO: School Tuck Shop Order System",
+        compositePKText: "(OrderID, ItemCode)",
+        description: "Teacher Demo: Group non-key fields into target tables where they functionally depend FULLY on that table's Primary Key.",
+        fields: [
+          { id: "f0_1", name: "CustomerName", belongsTo: "t1" },
+          { id: "f0_2", name: "ItemName", belongsTo: "t2" },
+          { id: "f0_3", name: "UnitPrice", belongsTo: "t2" },
+          { id: "f0_4", name: "Quantity", belongsTo: "t3" }
+        ],
+        tables: [
+          { id: "t1", title: "Order Table", pk: "OrderID (PK)", desc: "Depends ONLY on OrderID" },
+          { id: "t2", title: "Item Table", pk: "ItemCode (PK)", desc: "Depends ONLY on ItemCode" },
+          { id: "t3", title: "Order Line Table", pk: "OrderID (PK), ItemCode (PK)", desc: "Depends on FULL Composite Key (OrderID + ItemCode)" }
+        ],
+        explanation: "TEACHER DEMO EXPLANATION: CustomerName depends only on OrderID. ItemName & UnitPrice depend only on ItemCode. Quantity requires BOTH OrderID AND ItemCode."
+      },
+      {
+        scenarioTitle: "Scenario 1: S4 HKDSE Elective Registration",
+        compositePKText: "(StudentID, SubjectCode)",
+        description: "Drag or tap each non-key field into the table where it functionally depends FULLY on that table's Primary Key.",
+        fields: [
+          { id: "f1", name: "StudentName", belongsTo: "t1" },
+          { id: "f2", name: "SubjectName", belongsTo: "t2" },
+          { id: "f3", name: "TeacherInCharge", belongsTo: "t2" },
+          { id: "f4", name: "ExamGrade", belongsTo: "t3" }
+        ],
+        tables: [
+          { id: "t1", title: "Student Table", pk: "StudentID (PK)", desc: "Depends ONLY on StudentID" },
+          { id: "t2", title: "Subject Table", pk: "SubjectCode (PK)", desc: "Depends ONLY on SubjectCode" },
+          { id: "t3", title: "Elective Grade Table", pk: "StudentID (PK), SubjectCode (PK)", desc: "Depends on FULL Composite Key" }
+        ],
+        explanation: "Great job! StudentName only depends on StudentID. SubjectName and TeacherInCharge depend only on SubjectCode. ExamGrade depends on BOTH StudentID AND SubjectCode."
+      },
+      {
+        scenarioTitle: "Scenario 2: HK Secondary School Sports Day",
+        compositePKText: "(StudentNumber, ActivityCode)",
+        description: "Group fields into tables to eliminate partial key dependencies on StudentNumber or ActivityCode.",
+        fields: [
+          { id: "f1", name: "StudentName", belongsTo: "t1" },
+          { id: "f2", name: "StudentClass", belongsTo: "t1" },
+          { id: "f3", name: "ActivityName", belongsTo: "t2" },
+          { id: "f4", name: "Venue", belongsTo: "t2" },
+          { id: "f5", name: "Score", belongsTo: "t3" }
+        ],
+        tables: [
+          { id: "t1", title: "Student Table", pk: "StudentNumber (PK)", desc: "Depends on StudentNumber" },
+          { id: "t2", title: "Activity Table", pk: "ActivityCode (PK)", desc: "Depends on ActivityCode" },
+          { id: "t3", title: "Event Result Table", pk: "StudentNumber (PK), ActivityCode (PK)", desc: "Depends on (StudentNumber + ActivityCode)" }
+        ],
+        explanation: "Excellent! StudentName and StudentClass depend only on StudentNumber. ActivityName and Venue depend only on ActivityCode. Score depends on the combination of StudentNumber + ActivityCode."
+      }
+    ];
+
+    let soundEnabled = true;
+    let audioCtx = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playSound(type) {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const now = ctx.currentTime;
+        const gain = ctx.createGain();
+        gain.connect(ctx.destination);
+
+        if (type === 'correct') {
+          const osc = ctx.createOscillator();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(523.25, now); // C5
+          osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+          osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2); // G5
+          osc.connect(gain);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+          osc.start(now);
+          osc.stop(now + 0.35);
+        } else if (type === 'wrong') {
+          const osc = ctx.createOscillator();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, now); // A3
+          osc.frequency.exponentialRampToValueAtTime(140, now + 0.2);
+          osc.connect(gain);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+          osc.start(now);
+          osc.stop(now + 0.25);
+        } else if (type === 'win') {
+          const notes = [523.25, 659.25, 783.99, 1046.50];
+          notes.forEach((freq, idx) => {
+            const subOsc = ctx.createOscillator();
+            const subGain = ctx.createGain();
+            subOsc.type = 'triangle';
+            subOsc.frequency.setValueAtTime(freq, now + idx * 0.1);
+            subGain.gain.setValueAtTime(0.2, now + idx * 0.1);
+            subGain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.1 + 0.25);
+            subOsc.connect(subGain);
+            subGain.connect(ctx.destination);
+            subOsc.start(now + idx * 0.1);
+            subOsc.stop(now + idx * 0.1 + 0.25);
+          });
+        }
+      } catch (e) {
+        console.error("Audio playback error:", e);
+      }
+    }
+
+    let score = 0;
+    let streak = 0;
+    let current1NFRound = 0;
+    let current2NFScenario = 0;
+    let selectedFieldForTap = null;
+    let stage2Assignments = {}; // fieldId -> tableId
+
+    const screenStart = document.getElementById('screen-start');
+    const screenStage1 = document.getElementById('screen-stage1');
+    const screenStage2 = document.getElementById('screen-stage2');
+    const screenSummary = document.getElementById('screen-summary');
+    const scoreDisplay = document.getElementById('score-display');
+    const streakDisplay = document.getElementById('streak-display');
+
+    document.getElementById('sound-toggle').addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      document.getElementById('sound-toggle').textContent = soundEnabled ? '🔊' : '🔇';
+    });
+
+    document.getElementById('btn-start').addEventListener('click', startGame);
+    document.getElementById('btn-start-2nf').addEventListener('click', startStage2Directly);
+    document.getElementById('1nf-btn-next').addEventListener('click', next1NFRound);
+    document.getElementById('2nf-btn-check').addEventListener('click', validate2NF);
+    document.getElementById('2nf-btn-next').addEventListener('click', next2NFScenario);
+    document.getElementById('btn-restart').addEventListener('click', startGame);
+
+    function updateHUD() {
+      scoreDisplay.textContent = score;
+      streakDisplay.textContent = streak;
+    }
+
+    function addScore(points) {
+      streak++;
+      score += points + (streak * 10);
+      updateHUD();
+    }
+
+    function resetStreak() {
+      streak = 0;
+      updateHUD();
+    }
+
+    function startGame() {
+      score = 0;
+      streak = 0;
+      current1NFRound = 0;
+      current2NFScenario = 0;
+      updateHUD();
+
+      screenStart.classList.add('hidden');
+      screenSummary.classList.add('hidden');
+      screenStage2.classList.add('hidden');
+      screenStage1.classList.remove('hidden');
+      screenStage1.classList.add('flex');
+
+      load1NFRound(current1NFRound);
+    }
+
+    function startStage2Directly() {
+      score = 0;
+      streak = 0;
+      current2NFScenario = 0;
+      updateHUD();
+
+      screenStart.classList.add('hidden');
+      screenSummary.classList.add('hidden');
+      screenStage1.classList.add('hidden');
+      screenStage1.classList.remove('flex');
+      screenStage2.classList.remove('hidden');
+      screenStage2.classList.add('flex');
+
+      load2NFScenario(current2NFScenario);
+    }
+
+    function load1NFRound(index) {
+      const data = data1NF[index];
+      
+      const demoBadge = document.getElementById('1nf-demo-badge');
+      if (data.isDemo) {
+        demoBadge.classList.remove('hidden');
+      } else {
+        demoBadge.classList.add('hidden');
+      }
+
+      document.getElementById('1nf-round-num').textContent = data.isDemo ? "DEMO" : index;
+      document.getElementById('1nf-total-rounds').textContent = data1NF.length - 1;
+      document.getElementById('1nf-instruction-text').textContent = data.instruction;
+      
+      const feedback = document.getElementById('1nf-feedback');
+      feedback.classList.add('hidden');
+      document.getElementById('1nf-btn-next').classList.add('hidden');
+
+      // Build Headers
+      const thead = document.getElementById('1nf-table-head');
+      thead.innerHTML = '';
+      const trHead = document.createElement('tr');
+      data.headers.forEach((h, cIdx) => {
+        const th = document.createElement('th');
+        th.className = 'p-3 border-b border-slate-700 font-semibold cell-hover';
+        th.innerHTML = `${h} <span class="text-xs text-slate-500 font-normal">🔍</span>`;
+        th.onclick = () => check1NFAnswer({ header: true, col: cIdx });
+        trHead.appendChild(th);
+      });
+      thead.appendChild(trHead);
+
+      // Build Body
+      const tbody = document.getElementById('1nf-table-body');
+      tbody.innerHTML = '';
+      data.rows.forEach((row, rIdx) => {
+        const tr = document.createElement('tr');
+        row.forEach((cell, cIdx) => {
+          const td = document.createElement('td');
+          td.className = 'p-3 border-b border-slate-800 cell-hover';
+          td.textContent = cell;
+          td.onclick = () => check1NFAnswer({ row: rIdx, col: cIdx });
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    function check1NFAnswer(target) {
+      const currentData = data1NF[current1NFRound];
+      const feedback = document.getElementById('1nf-feedback');
+      const fault = currentData.fault;
+
+      let isCorrect = false;
+
+      if (fault.cols) {
+        // Accepts any column in the repeating group
+        isCorrect = fault.cols.includes(target.col);
+      } else if (fault.header) {
+        isCorrect = target.header && target.col === fault.col;
+      } else {
+        isCorrect = !target.header && target.row === fault.row && target.col === fault.col;
+      }
+
+      feedback.classList.remove('hidden', 'bg-emerald-900/50', 'text-emerald-200', 'border-emerald-500', 'bg-rose-900/50', 'text-rose-200', 'border-rose-500', 'border');
+
+      if (isCorrect) {
+        playSound('correct');
+        addScore(100);
+        feedback.classList.add('bg-emerald-900/50', 'text-emerald-200', 'border-emerald-500', 'border');
+        feedback.innerHTML = `✅ <strong>Correct!</strong> ${currentData.explanation}`;
+        document.getElementById('1nf-btn-next').classList.remove('hidden');
+      } else {
+        playSound('wrong');
+        resetStreak();
+        feedback.classList.add('bg-rose-900/50', 'text-rose-200', 'border-rose-500', 'border');
+        feedback.innerHTML = `❌ <strong>Not quite!</strong> That element is fine under 1NF. Try looking for multi-valued cells or repeating attribute headers!`;
+      }
+    }
+
+    function next1NFRound() {
+      current1NFRound++;
+      if (current1NFRound < data1NF.length) {
+        load1NFRound(current1NFRound);
+      } else {
+        // Transition to Stage 2
+        screenStage1.classList.add('hidden');
+        screenStage1.classList.remove('flex');
+        screenStage2.classList.remove('hidden');
+        screenStage2.classList.add('flex');
+        load2NFScenario(current2NFScenario);
+      }
+    }
+
+    function load2NFScenario(index) {
+      const data = data2NF[index];
+      stage2Assignments = {};
+      selectedFieldForTap = null;
+
+      const demoBadge = document.getElementById('2nf-demo-badge');
+      if (data.isDemo) {
+        demoBadge.classList.remove('hidden');
+      } else {
+        demoBadge.classList.add('hidden');
+      }
+
+      document.getElementById('2nf-scenario-num').textContent = data.isDemo ? "DEMO" : index;
+      document.getElementById('2nf-total-scenarios').textContent = data2NF.length - 1;
+      document.getElementById('2nf-scenario-title').textContent = data.scenarioTitle;
+      document.getElementById('pk-badge').textContent = data.compositePKText;
+      document.getElementById('2nf-scenario-desc').textContent = data.description;
+
+      const feedback = document.getElementById('2nf-feedback');
+      feedback.classList.add('hidden');
+      document.getElementById('2nf-btn-next').classList.add('hidden');
+      document.getElementById('2nf-btn-check').classList.remove('hidden');
+
+      render2NFPool();
+      render2NFTables();
+    }
+
+    function render2NFPool() {
+      const pool = document.getElementById('2nf-fields-pool');
+      pool.innerHTML = '';
+      const data = data2NF[current2NFScenario];
+
+      data.fields.forEach(f => {
+        if (!stage2Assignments[f.id]) {
+          const item = createDraggableItem(f);
+          pool.appendChild(item);
+        }
+      });
+
+      if (pool.children.length === 0) {
+        pool.innerHTML = `<span class="text-xs text-slate-500 italic">All fields placed in tables below! Click validate when ready.</span>`;
+      }
+    }
+
+    function render2NFTables() {
+      const grid = document.getElementById('2nf-tables-grid');
+      grid.innerHTML = '';
+      const data = data2NF[current2NFScenario];
+
+      data.tables.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'bg-slate-900/90 border border-slate-700 rounded-xl p-3 flex flex-col justify-between';
+        
+        card.innerHTML = `
+          <div>
+            <h4 class="font-bold text-sm text-indigo-300">${t.title}</h4>
+            <div class="text-xs text-amber-300 font-mono my-1 font-semibold">${t.pk}</div>
+            <p class="text-[11px] text-slate-400 mb-2">${t.desc}</p>
+          </div>
+          <div id="drop-zone-${t.id}" data-table-id="${t.id}" class="drop-zone border-2 border-dashed border-slate-700 rounded-lg p-2 flex flex-wrap gap-2 items-start bg-slate-950/40">
+          </div>
+        `;
+
+        const dropZone = card.querySelector('.drop-zone');
+        
+        // Drag Events
+        dropZone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          dropZone.classList.add('drag-over');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+        dropZone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          dropZone.classList.remove('drag-over');
+          const fieldId = e.dataTransfer.getData('text/plain');
+          if (fieldId) {
+            stage2Assignments[fieldId] = t.id;
+            selectedFieldForTap = null;
+            render2NFPool();
+            render2NFTables();
+          }
+        });
+
+        // Tap/Click Event Fallback for mobile/tablets
+        dropZone.addEventListener('click', () => {
+          if (selectedFieldForTap) {
+            stage2Assignments[selectedFieldForTap] = t.id;
+            selectedFieldForTap = null;
+            render2NFPool();
+            render2NFTables();
+          }
+        });
+
+        grid.appendChild(card);
+
+        // Populate fields currently inside table
+        const currentZone = document.getElementById(`drop-zone-${t.id}`);
+        data.fields.forEach(f => {
+          if (stage2Assignments[f.id] === t.id) {
+            const item = createDraggableItem(f);
+            currentZone.appendChild(item);
+          }
+        });
+      });
+    }
+
+    function createDraggableItem(f) {
+      const div = document.createElement('div');
+      div.id = `field-${f.id}`;
+      div.draggable = true;
+      div.className = `draggable-item px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-900/80 border border-indigo-600 text-indigo-100 flex items-center gap-1 shadow-sm ${selectedFieldForTap === f.id ? 'selected-item' : ''}`;
+      div.innerHTML = `<span>📄 ${f.name}</span>`;
+
+      div.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', f.id);
+      });
+
+      div.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (selectedFieldForTap === f.id) {
+          selectedFieldForTap = null;
+        } else {
+          selectedFieldForTap = f.id;
+        }
+        render2NFPool();
+        render2NFTables();
+      });
+
+      return div;
+    }
+
+    function validate2NF() {
+      const data = data2NF[current2NFScenario];
+      const feedback = document.getElementById('2nf-feedback');
+      feedback.classList.remove('hidden', 'bg-emerald-900/50', 'text-emerald-200', 'border-emerald-500', 'bg-rose-900/50', 'text-rose-200', 'border-rose-500', 'border');
+
+      let allAssigned = true;
+      let allCorrect = true;
+
+      data.fields.forEach(f => {
+        const assignedTable = stage2Assignments[f.id];
+        if (!assignedTable) {
+          allAssigned = false;
+        } else if (assignedTable !== f.belongsTo) {
+          allCorrect = false;
+        }
+      });
+
+      if (!allAssigned) {
+        playSound('wrong');
+        feedback.classList.add('bg-rose-900/50', 'text-rose-200', 'border-rose-500', 'border');
+        feedback.innerHTML = `⚠️ <strong>Incomplete:</strong> Please place all fields into a candidate table before validating!`;
+        return;
+      }
+
+      if (allCorrect) {
+        playSound('correct');
+        addScore(150);
+        feedback.classList.add('bg-emerald-900/50', 'text-emerald-200', 'border-emerald-500', 'border');
+        feedback.innerHTML = `✅ <strong>Perfect 2NF Structure!</strong> ${data.explanation}`;
+        document.getElementById('2nf-btn-check').classList.add('hidden');
+        document.getElementById('2nf-btn-next').classList.remove('hidden');
+      } else {
+        playSound('wrong');
+        resetStreak();
+        feedback.classList.add('bg-rose-900/50', 'text-rose-200', 'border-rose-500', 'border');
+        feedback.innerHTML = `❌ <strong>Partial Dependency Detected:</strong> Some fields are placed in the wrong table. Ask yourself: <em>Does this field depend on the whole primary key or just one part of it?</em>`;
+      }
+    }
+
+    function next2NFScenario() {
+      current2NFScenario++;
+      if (current2NFScenario < data2NF.length) {
+        load2NFScenario(current2NFScenario);
+      } else {
+        showSummary();
+      }
+    }
+
+    function showSummary() {
+      playSound('win');
+      screenStage2.classList.add('hidden');
+      screenStage2.classList.remove('flex');
+      screenSummary.classList.remove('hidden');
+
+      document.getElementById('final-score').textContent = score;
+
+      const ratingEl = document.getElementById('final-rating');
+      if (score >= 600) {
+        ratingEl.textContent = "🌟 Database Master! Outstanding understanding of 1NF & 2NF principles!";
+      } else if (score >= 400) {
+        ratingEl.textContent = "👍 Great Job! Good grasp of normalization basics.";
+      } else {
+        ratingEl.textContent = "📚 Good effort! Review 1NF atomicity and 2NF partial dependencies.";
+      }
+    }
+  </script>
+</body>
+</html>
